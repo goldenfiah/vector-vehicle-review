@@ -1,0 +1,142 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>智能检测 · VECTOR</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%2317211d'/%3E%3Cpath d='M5 21h22M8 25h16M9 17l4-7 4 4 3-6 4 9' fill='none' stroke='%23e9dfcd' stroke-width='2'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="app.css">
+<link rel="stylesheet" href="detect.css">
+</head>
+<body class="lab-body">
+<header class="lab-head">
+  <a class="lab-brand" href="index.html">
+    <span class="lab-mark">TL</span>
+    <span><b>VECTOR</b><small>智能检测 / DETECT LAB</small></span>
+  </a>
+  <div class="lab-head-meta">
+    <span class="mono">MEDIA <b id="lab-media">DEMO YARD</b></span>
+    <span class="mono">SIZE <b id="lab-size">1800 × 1200</b></span>
+    <span class="mono">ENGINE <b id="lab-engine">LOCAL / MOCK</b></span>
+  </div>
+  <div class="lab-head-actions">
+    <span class="lab-live"><i></i>READY</span>
+    <a class="tl-btn small" href="index.html">← 返回工作区</a>
+  </div>
+</header>
+
+<main class="lab-shell">
+  <aside class="lab-left">
+    <div class="lab-panel-head"><span>影像源</span><span class="mono">01 / INPUT</span></div>
+    <div class="lab-drop" id="lab-drop">
+      <b>拖入影像</b>
+      <span>PNG / JPEG / SVG</span>
+      <label class="tl-btn small" for="lab-file">选择文件</label>
+      <input id="lab-file" type="file" accept="image/*" hidden>
+    </div>
+    <div class="lab-source-actions">
+      <button class="tl-btn small" id="lab-sample">示例场地平面图</button>
+      <button class="tl-btn small" id="lab-detect">检测当前帧 →</button>
+    </div>
+    <div class="lab-meta">
+      <div><span>文件</span><b id="lab-name">yard.svg</b></div>
+      <div><span>尺寸</span><b id="lab-dim">1800 × 1200</b></div>
+      <div><span>目标</span><b id="lab-count">0</b></div>
+      <div><span>状态</span><b id="lab-status">未检测</b></div>
+    </div>
+    <div class="lab-panel-head"><span>目标列表</span><span class="mono" id="lab-list-count">0</span></div>
+    <div class="lab-list" id="lab-list"></div>
+    <button class="tl-btn small" id="lab-export" disabled>导出 JSON</button>
+  </aside>
+
+  <section class="lab-middle">
+    <div class="lab-tools">
+      <button class="tl-btn small on" id="lab-tool-select">选择</button>
+      <button class="tl-btn small" id="lab-fit">适应</button>
+      <button class="tl-btn small" id="lab-one">1:1</button>
+      <span class="spacer"></span>
+      <button class="tl-btn small danger" id="lab-clear" disabled>清空全部框</button>
+    </div>
+    <div class="lab-stage" id="lab-stage">
+      <canvas id="lab-canvas"></canvas>
+      <div class="lab-scan" id="lab-scan" aria-hidden="true"></div>
+      <div class="lab-hud"><b>YARD / V-17</b><span id="lab-coord">x — · y —</span><span id="lab-zoom">—</span></div>
+      <div class="lab-tip">点击框选目标 · 滚轮缩放 · 右键拖动平移</div>
+    </div>
+    <div class="lab-strip">
+      <span class="mono">ANNOTATION / ROTATED BOX</span>
+      <span class="mono">CONTRACT 0.2</span>
+      <span class="mono">LOCAL SESSION</span>
+      <span class="mono" id="lab-clock">--:--:--</span>
+    </div>
+  </section>
+
+  <aside class="lab-right">
+    <section class="lab-panel">
+      <div class="lab-panel-head"><span>目标属性</span><span class="mono" id="lab-sel-id">—</span></div>
+      <div class="lab-inspector" id="lab-inspector">
+        <div class="lab-empty"><b>未选择目标</b>点击画布或列表中的框，查看中心、尺寸与四角坐标。</div>
+      </div>
+    </section>
+
+    <section class="lab-panel lab-ai-panel">
+      <div class="lab-panel-head"><span>AI 辅助框选</span><span class="tag" id="lab-ai-state">未接入</span></div>
+      <p class="lab-ai-copy">在目标周围拖一个粗框，或填写自己的分割接口。候选必须人工采纳。</p>
+      <label class="lab-field"><span>提示词</span><input id="lab-prompt" value="vehicle" autocomplete="off"></label>
+      <div class="lab-ai-actions">
+        <button class="tl-btn small orange" id="lab-ai-run">AI 框选</button>
+        <button class="tl-btn small" id="lab-ai-config">接入设置</button>
+      </div>
+      <p class="lab-ai-note" id="lab-ai-note">POST /vision/segment · 未配置时走演示接口</p>
+    </section>
+  </aside>
+</main>
+
+<footer class="lab-foot">
+  <span class="mono">VECTOR / DETECT LAB</span>
+  <span class="mono">POLYGON = ORIGINAL PIXELS</span>
+  <span class="mono">NO MODEL WEIGHTS IN BROWSER</span>
+  <span class="spacer"></span>
+  <span class="mono">ASIA-SHANGHAI</span>
+</footer>
+
+<dialog class="lab-dialog" id="lab-dialog" aria-labelledby="lab-dialog-title">
+  <form id="lab-dialog-form">
+    <header>
+      <div><p class="eyebrow">AI ACCESS / SEGMENT</p><h2 id="lab-dialog-title">接入 AI 接口</h2></div>
+      <button class="lab-dialog-x" id="lab-dialog-close" type="button" aria-label="关闭">×</button>
+    </header>
+    <p class="lab-dialog-copy">填写一个实现 SegmentResponse 的 HTTP 接口。设置只保存在本机，不进入代码仓库。</p>
+    <label class="lab-field"><span>接口地址</span><input id="lab-ai-endpoint" placeholder="https://your-ai.example.com/vision/segment"></label>
+    <div class="lab-dialog-row">
+      <label class="lab-field"><span>API Key</span><input id="lab-ai-key" type="password" placeholder="Bearer token（可选）"></label>
+      <label class="lab-field"><span>模型名</span><input id="lab-ai-model" placeholder="sam2.1-hiera-large"></label>
+    </div>
+    <div class="lab-dialog-note">
+      <b>请求</b> POST 接口地址，JSON 包含 <code>image.data_url</code>、<code>prompt</code>、<code>mode</code>；
+      <b>响应</b> <code>{ candidates: [{ polygon, quality, label }] }</code>。坐标使用原图像素。
+    </div>
+    <ol class="lab-steps">
+      <li><b>填</b> 接口地址、Key 和模型</li>
+      <li><b>存</b> 保存后状态变为「已接入」</li>
+      <li><b>框</b> 在画布拖一个粗框，点「AI 框选」</li>
+      <li><b>采</b> 检查候选后写入标注</li>
+    </ol>
+    <footer>
+      <button class="tl-btn small danger" id="lab-ai-clear" type="button">清除接入</button>
+      <span class="spacer"></span>
+      <button class="tl-btn small" id="lab-dialog-cancel" type="button">取消</button>
+      <button class="tl-btn small solid" id="lab-ai-save" type="button">保存并使用</button>
+    </footer>
+  </form>
+</dialog>
+
+<div class="tl-cursor-dot" id="cursor-dot" aria-hidden="true"></div>
+<div class="tl-cursor-ring" id="cursor-ring" aria-hidden="true"></div>
+
+<div class="tl-toasts" id="lab-toasts"></div>
+<script src="scene.js"></script>
+<script src="model.js"></script>
+<script src="detect.js"></script>
+</body>
+</html>

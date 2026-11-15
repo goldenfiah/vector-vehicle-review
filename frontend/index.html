@@ -1,0 +1,170 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>VECTOR · 车辆检测复核</title>
+<meta name="description" content="面向车辆巡查的遥感车辆检测与人工复核工作台">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%2317211d'/%3E%3Cpath d='M5 21h22M8 25h16M9 17l4-7 4 4 3-6 4 9' fill='none' stroke='%23e9dfcd' stroke-width='2'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="app.css">
+</head>
+<body>
+<div class="boot" id="boot" aria-hidden="true">
+  <div class="boot-head">
+    <span class="mono">VECTOR / VEHICLE REVIEW</span>
+    <span class="mono">BOOT SEQUENCE</span>
+  </div>
+  <div class="boot-main">
+    <b id="boot-index">00</b><span class="mono">/ 05</span>
+  </div>
+  <div class="boot-line"><i id="boot-line"></i></div>
+  <div class="boot-foot">
+    <span class="mono" id="boot-status">LOADING YARD RECORDS</span>
+    <button class="mono" id="boot-skip" type="button">SKIP INTRO ↓</button>
+  </div>
+</div>
+<div class="auth" id="auth">
+  <div class="auth-grid">
+    <section class="auth-atlas" aria-label="系统介绍">
+      <div class="atlas-top">
+        <span class="atlas-mark">TL</span>
+        <span class="atlas-word">VECTOR<br><small>VEHICLE REVIEW</small></span>
+        <span class="atlas-coord">31°14′N / 121°29′E</span>
+      </div>
+
+      <div class="atlas-copy">
+        <p class="eyebrow">遥感影像 · 车辆复核 · 版本留痕</p>
+        <h1>把场地平面图上的<br>每一次判断，<br><em>落成记录。</em></h1>
+        <p class="atlas-lede">面向车辆巡查的影像分析工作台。检测、复核、统计与报告在同一条记录线上完成。</p>
+      </div>
+
+      <div class="atlas-facts">
+        <div><span>01</span><b>影像接入</b><small>图片 / 视频 / 批量</small></div>
+        <div><span>02</span><b>人工复核</b><small>旋转框 / 版本</small></div>
+        <div><span>03</span><b>AI 辅助</b><small>自定义分割接口</small></div>
+      </div>
+
+      <div class="atlas-lines" aria-hidden="true">
+        <svg viewBox="0 0 900 260" preserveAspectRatio="none">
+          <path d="M0 210c90-80 170-80 260 0s170 80 260 0 170-80 260 0 120 50 120 50" fill="none" stroke="currentColor" stroke-width="1"/>
+          <path d="M0 180c90-80 170-80 260 0s170 80 260 0 170-80 260 0 120 50 120 50" fill="none" stroke="currentColor" stroke-width="1" opacity=".55"/>
+          <path d="M0 240c90-80 170-80 260 0s170 80 260 0 170-80 260 0 120 50 120 50" fill="none" stroke="#c85b35" stroke-width="1.5"/>
+          <g fill="currentColor"><circle cx="118" cy="182" r="3"/><circle cx="386" cy="206" r="3"/><circle cx="654" cy="174" r="3"/></g>
+        </svg>
+        <span class="atlas-annotation">FIG. 01 — YARD PLAN / 2026</span>
+      </div>
+    </section>
+
+    <section class="auth-panel">
+      <form class="auth-card" id="auth-form" novalidate>
+        <div class="auth-card-top">
+          <span class="mono">/ 进入工作区</span>
+          <span class="mono">ACCESS 01</span>
+        </div>
+        <h2>项目登录</h2>
+        <p class="auth-hint">使用管理员分配的账号进入受控项目空间。</p>
+
+        <label class="tl-field">
+          <span>账号</span>
+          <input id="auth-user" name="username" autocomplete="username" value="lin.analyst" required>
+        </label>
+        <label class="tl-field">
+          <span>密码</span>
+          <span class="input-wrap">
+            <input id="auth-pass" name="password" type="password" autocomplete="current-password" value="demo" required>
+            <button class="reveal" id="auth-reveal" type="button" aria-label="显示密码">显示</button>
+          </span>
+        </label>
+        <label class="tl-field">
+          <span>项目空间</span>
+          <select id="auth-project" name="project">
+            <option value="yard-a">车辆巡查 A 区 / PRJ-V-0271</option>
+            <option value="yard-b">车辆巡查 B 区 / PRJ-V-0272</option>
+          </select>
+        </label>
+
+        <label class="remember">
+          <input id="auth-remember" type="checkbox" checked>
+          <span>在这台设备上保持登录 7 天</span>
+        </label>
+
+        <p class="auth-error" id="auth-error" role="alert"></p>
+        <button class="tl-btn solid wide" type="submit">进入项目空间 <span>→</span></button>
+        <p class="auth-foot">受控接入 · 不提供公开注册 · 所有影像操作留痕</p>
+      </form>
+    </section>
+  </div>
+</div>
+
+<div class="app" id="app" hidden>
+  <div class="app-loader hidden" id="app-loader" role="status" aria-live="polite"><span class="spinner"></span><span>正在读取项目数据…</span></div>
+  <aside class="tl-rail">
+    <a class="rail-brand" href="#" data-view="project" aria-label="返回项目总览">
+      <span class="rail-mark">TL</span>
+      <span class="rail-name">VECTOR<small>车辆复核</small></span>
+    </a>
+
+    <nav class="rail-nav" id="rail-nav" aria-label="模块导航">
+      <span class="rail-ink" id="rail-ink" aria-hidden="true"></span>
+      <button data-view="project"><span>01</span><b>项目总览</b><i>PROJECT</i></button>
+      <button data-view="task"><span>02</span><b>检测任务</b><i>TASK</i></button>
+      <button data-view="workbench"><span>03</span><b>复核台</b><i>REVIEW</i></button>
+      <a href="detect.html"><span>04</span><b>智能检测</b><i>DETECT</i></a>
+      <button data-view="review"><span>05</span><b>疑难队列</b><i>QUEUE</i></button>
+      <button data-view="stats"><span>06</span><b>区域计数</b><i>REGION</i></button>
+      <button data-view="history"><span>07</span><b>修订档案</b><i>ARCHIVE</i></button>
+      <button data-view="export"><span>08</span><b>报告输出</b><i>EXPORT</i></button>
+      <button data-view="guide"><span>09</span><b>使用说明</b><i>MANUAL</i></button>
+    </nav>
+
+    <div class="rail-project">
+      <span class="mono">CURRENT PROJECT</span>
+      <b id="rail-project-name">车辆巡查 A 区</b>
+      <small id="rail-project-code">PRJ-V-0271</small>
+      <div class="rail-meter"><i></i><span>记录已连接</span></div>
+    </div>
+
+    <div class="rail-foot">
+      <span class="rail-user"><i id="rail-user-initial">L</i><span id="rail-user-name">lin.analyst</span></span>
+      <button class="rail-exit" id="logout" type="button">退出</button>
+    </div>
+  </aside>
+
+  <div class="tl-work">
+    <header class="tl-command">
+      <div class="command-left">
+        <span class="mono command-coord">31°14′N · 121°29′E</span>
+        <span class="command-divider"></span>
+        <span class="crumb" id="crumb">项目总览</span>
+      </div>
+      <div class="command-right">
+        <span class="sync"><i></i><span id="sync-label">本地演示</span></span>
+        <span class="command-user" id="command-user">lin.analyst</span>
+        <button class="tl-btn quiet" id="command-exit" type="button">退出</button>
+      </div>
+    </header>
+
+    <main class="tl-view" id="view-root" tabindex="-1"></main>
+
+    <footer class="tl-ticker">
+      <div class="ticker-flow" id="ticker-flow" aria-hidden="true">
+        <span class="mono">VECTOR / VEHICLE REVIEW</span>
+        <span class="mono">CONTRACT 0.2</span>
+        <span class="mono">1800 × 1200 · 9 TILES · NMS 0.10</span>
+      </div>
+      <span class="mono" id="ticker-clock">--:--:--</span>
+      <span class="mono">LOCAL / ASIA-SHANGHAI</span>
+    </footer>
+  </div>
+</div>
+
+<div class="tl-cursor-dot" id="cursor-dot" aria-hidden="true"></div>
+<div class="tl-cursor-ring" id="cursor-ring" aria-hidden="true"></div>
+
+<div class="tl-toasts" id="toasts" role="status" aria-live="polite"></div>
+
+<script src="scene.js"></script>
+<script src="data-api.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
